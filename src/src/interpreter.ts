@@ -33,6 +33,7 @@ const evaluate = (node: ASTNode, env: Environment): any =>
             }
 
             const value = evaluate(value_node, env);
+            // @ts-ignore
             env[name_node.value] = value;
             return value;
         }
@@ -55,6 +56,7 @@ const evaluate = (node: ASTNode, env: Environment): any =>
             const params = params_node.map(p =>
             {
                 if (!is_symbol(p)) throw new Error("Parameters must be symbols");
+                // @ts-ignore
                 return p.value;
             });
 
@@ -78,10 +80,7 @@ const evaluate = (node: ASTNode, env: Environment): any =>
 
         if (typeof first_evaluated !== 'function')
         {
-            const name = typeof first === 'object' && first !== null && !Array.isArray(first)
-                ? (first as Token).value
-                : JSON.stringify(first);
-            throw new Error(`${name} is not a function`);
+            throw new Error(`${stringify(first_evaluated)} is not a function`);
         }
 
         const args = rest.map(arg => evaluate(arg, env));
