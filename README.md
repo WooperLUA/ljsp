@@ -1,0 +1,50 @@
+# LJSP (Lisp-like JavaScript Processor)
+
+A small lisp language made for JavaScript developers.
+
+## Features
+
+- **Lisp Syntax**: Parentheses for function calls `(func arg1 arg2)`.
+- **List Support**: Square brackets for list literals `[1 2 3]`.
+- **Keywords**: Keywords start with the `:` prefix.
+- **JavaScript Interop**: Access JavaScript native methods with the `$` prefix (only $console support for now).
+- **Others**: Boolean and null literals use `@true`, `@false`, and `@null` (`undefined` is treated as null).
+
+## Syntax Overview
+
+### Literals
+- Numbers: `42`, `-3.14`
+- Strings: `'hello world'`
+- Booleans: `@true`, `@false`
+- Null: `@null`
+- Lists: `[1 2 3 [4 5]]`
+- Keywords: `:const`, `:fn`, `:if`
+
+### Core Operations
+Since the environment maps keywords to their respective functionalities, you typically call them by evaluating the keyword:
+
+```ljs
+(:const x 10)
+(:const add-five (:fn (n) (+ n 5)))
+(add-five x)       ; 15
+```
+
+### Conditionals
+```ljs
+(:if (> x 5) 'large' 'small')
+```
+
+### List Manipulation
+```ljs
+(:const my-list [1 2 3])
+(get my-list 0)      ; 1
+(length my-list)     ; 3
+(push my-list 4)     ; [1 2 3 4]
+```
+
+### Console Methods (with JavaScript interop)
+```ljs
+($console.log 'Value of x is:' x)
+($console.warn 'Warning message')
+($console.table [[1 2] [3 4]])
+```
