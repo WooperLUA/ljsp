@@ -7,7 +7,7 @@ A small lisp language made for JavaScript developers.
 - **Lisp Syntax**: Parentheses for function calls `(func arg1 arg2)`.
 - **List Support**: Square brackets for list literals `[1 2 3]`.
 - **Keywords**: Keywords start with the `:` prefix.
-- **JavaScript Interop**: Access JavaScript native methods with the `$` prefix (only $console support for now).
+- **JavaScript Interop**: Access JavaScript native methods with the `$` prefix (only `$console` support for now).
 - **Others**: Boolean and null literals use `@true`, `@false`, and `@null` (`undefined` is treated as null).
 
 ## Syntax Overview
