@@ -1,5 +1,4 @@
 # LJSP (Lisp-like JavaScript Processor)
-
 A small lisp language made for JavaScript developers.
 
 ## Features
@@ -9,6 +8,11 @@ A small lisp language made for JavaScript developers.
 - **Keywords**: Keywords start with the `:` prefix.
 - **JavaScript Interop**: Access JavaScript native methods with the `$` prefix (only `$console` support for now).
 - **Others**: Boolean and null literals use `@true`, `@false`, and `@null` (`undefined` is treated as null).
+
+## Sandbox available
+
+Check out the LJSP sandbox here to test out the language.
+- (https://wooperlua.github.io/ljsp/)
 
 ## Syntax Overview
 
