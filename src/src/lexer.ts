@@ -1,25 +1,48 @@
 import type {Token, TokenKind} from "@types";
 
 const token_patterns: [TokenKind, RegExp][] = [
-    ['comment', /;.*$/y],
+    ['comment', /;[^\n]*/y],
     ['boolean', /(@true|@false)\b/y],
     ['null', /@null\b/y],
     ['keyword', /:[a-zA-Z_][a-zA-Z0-9_\-?]*/y],
     ['string', /'([^'\\]|\\.)*'/y],
     ['number', /-?\d+(\.\d+)?/y],
-    ['operator', /(\/=|=|>|<|>=|<=|!=|==|[+\-*\/%=><!])/y],
-    ['invalid', /(true|false|null)\b/y],
-    ['symbol', /[a-zA-Z_][a-zA-Z0-9_\-?]*/y],
+    ['operator', /(>=|<=|!=|==|\/=|>|<|=|[+\-*\/%=!])/y],
+    ['invalid', /(true|false|null|let|var|function)\b/y],
+    ['symbol', /[a-zA-Z_$][a-zA-Z0-9_\-?.]*/y],
+    ['o_square_bracket', /\[/y],
+    ['c_square_bracket', /]/y],
     ['o_paren', /\(/y],
     ['c_paren', /\)/y],
 ];
 
 const lexing_predictions: Record<string, string> = {
-    '"':     "did you mean <'> ?",
-    'false': "did you mean <@false> ?",
-    'true':  "did you mean <@true> ?",
-    'null':  "did you mean <@null> ?",
+    '"':        "did you mean <'> ?",
+    'false':    "did you mean <@false> ?",
+    'true':     "did you mean <@true> ?",
+    'null':     "did you mean <@null> ?",
+    'let':      "did you mean <const> ?",
+    'var':      "did you mean <const> ?",
+    'function': "did you mean <fn> ?"
 };
+
+const cast = (kind: TokenKind, value: string) =>
+{
+    let new_value: any = value;
+    switch (kind)
+    {
+        case 'boolean':
+            new_value = new_value === '@true';
+            break;
+        case 'null':
+            new_value = null;
+            break;
+        case 'number':
+            new_value = parseFloat(new_value);
+            break;
+    }
+    return new_value;
+}
 
 const new_token = (kind: TokenKind, value: string): Token => ({kind, value});
 
@@ -45,6 +68,13 @@ export const tokenize = (source: string): Token[] =>
 
             if (match)
             {
+                if (kind === 'comment')
+                {
+                    cursor = regex.lastIndex;
+                    matched = true;
+                    break;
+                }
+
                 if (kind === 'invalid')
                 {
                     const word = match[0];
@@ -52,7 +82,10 @@ export const tokenize = (source: string): Token[] =>
                     throw new Error(`Unexpected token '${word}' at position ${cursor}${hint}`);
                 }
 
-                tokens.push(new_token(kind, match[0]));
+                // lexing casts
+                let value = cast(kind, match[0])
+
+                tokens.push(new_token(kind, value));
                 cursor = regex.lastIndex;
                 matched = true;
                 break;
@@ -74,3 +107,4 @@ export const tokenize = (source: string): Token[] =>
 
     return tokens;
 };
+

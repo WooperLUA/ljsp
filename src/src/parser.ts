@@ -28,9 +28,36 @@ export const parse = (tokens: Token[]): ASTNode[] =>
             return sub_expr;
         }
 
+        if (token.kind === 'o_square_bracket')
+        {
+            cursor++;
+            const list_values: ASTNode[] = [];
+
+            while (cursor < tokens.length && tokens[cursor]?.kind !== 'c_square_bracket')
+            {
+                list_values.push(parse_expr());
+            }
+
+            if (cursor >= tokens.length)
+            {
+                throw new Error("Unclosed square bracket");
+            }
+
+            cursor++;
+            return {
+                kind:  'list',
+                value: list_values
+            } as unknown as Token;
+        }
+
         if (token.kind === 'c_paren')
         {
             throw new Error("Unexpected closing parenthesis");
+        }
+
+        if (token.kind === 'c_square_bracket')
+        {
+            throw new Error("Unexpected closing square bracket");
         }
 
         cursor++;

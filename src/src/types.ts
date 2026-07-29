@@ -8,6 +8,9 @@ export type TokenKind =
     | 'operator'
     | 'invalid'
     | 'symbol'
+    | 'list'
+    | 'o_square_bracket'
+    | 'c_square_bracket'
     | 'o_paren'
     | 'c_paren';
 

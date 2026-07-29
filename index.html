@@ -3,16 +3,32 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>ljsp</title>
+    <title>LJSP - A small lisp for JavaScript developers</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;600&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
+        ::selection
+        {
+            background:  rgba(230, 219, 116, .3);
+            color:       #EEE;
+            text-shadow: none;
+        }
+
+        *
+        {
+            scroll-behavior: smooth;
+            transition:      opacity .8s;
+        }
+
         body
         {
-            font-family:      'Geist', sans-serif;
+            font-family: 'Geist', sans-serif;
+            color:       oklch(98.5% 0 none);
+            margin:      0;
+            min-height:  100svh;
             background-color: oklch(20.5% 0 none);
-            color:            oklch(98.5% 0 none);
+            animation:       fade-in-slide-up .8s ease-out forwards;
         }
 
         h1
@@ -66,7 +82,7 @@
             width:            40svw;
             height:           15vh;
             padding:          1rem;
-            font-size:        1rem;
+            font-size:        1.2rem;
             display:          block;
         }
 
@@ -78,7 +94,7 @@
             border-radius:    8px;
             width:            40svw;
             height:           100%;
-            max-height:          100%;
+            max-height:       100%;
             padding:          1rem;
             font-size:        1rem;
             margin-top:       0;
@@ -131,6 +147,20 @@
         .hljs
         {
             background-color: oklch(26.9% 0 none) !important;
+        }
+
+        @keyframes fade-in-slide-up
+        {
+            0%
+            {
+                opacity:   0;
+                transform: translateY(20px);
+            }
+            100%
+            {
+                opacity:   1;
+                transform: translateY(0);
+            }
         }
 
         @media (width <= 768px)
@@ -214,6 +244,7 @@
 
             ljsp_ast.textContent = JSON.stringify(ast, null, 2)
             ljsp_output.textContent = output;
+            ljsp_output.style.color = '#e6db74'
             ljsp_output.appendChild(ljsp_output_caret);
 
             delete ljsp_ast.dataset.highlighted;
@@ -222,6 +253,8 @@
         catch (err)
         {
             ljsp_ast.textContent = 'Error occurred, could not build ast.'
+            ljsp_output.style.color = '#f92672'
+            ljsp_output.textContent = err;
         }
     });
 
