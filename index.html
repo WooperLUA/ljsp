@@ -52,27 +52,71 @@
             color:         oklch(70.8% 0 none);
         }
 
-        textarea
+        .editor-container
         {
-            background-color: oklch(26.9% 0 none);
-            border:           2px solid oklch(37.1% 0 none);
-            border-radius:    8px;
-            height:           48vh;
-            color:            oklch(98.5% 0 none);
-            font-family:      "JetBrains Mono", monospace;
-            font-size:        1.2rem;
-            padding:          1rem;
-            box-sizing:       border-box;
-            resize:           none;
+            position:      relative;
+            height:        48vh;
+            margin-bottom: 1rem;
         }
 
-        textarea:focus
+        .editor-container textarea,
+        .editor-container pre
         {
-            outline:    none;
+            position:      absolute;
+            top:           0;
+            left:          0;
+            width:         100%;
+            height:        100%;
+            padding:       1rem;
+            margin:        0;
+            box-sizing:    border-box;
+            font-family:   "JetBrains Mono", monospace;
+            font-size:     1.2rem;
+            line-height:   1.5;
+            white-space:   pre-wrap;
+            word-wrap:     break-word;
+            border:        2px solid oklch(37.1% 0 none);
+            border-radius: 8px;
+            overflow:      auto;
+        }
+
+        .editor-container textarea
+        {
+            background:  transparent;
+            color:       transparent;
+            caret-color: #e6db74;
+            z-index:     1;
+            resize:      none;
+            outline:     none;
+        }
+
+        .editor-container textarea:focus
+        {
             box-shadow: rgba(149, 157, 165, 0.1) 0 2px 24px;
         }
 
-        code
+        .editor-container pre
+        {
+            z-index:          0;
+            background-color: oklch(26.9% 0 none);
+            color:            oklch(98.5% 0 none);
+            pointer-events:   none;
+        }
+
+        .editor-container pre code
+        {
+            padding:     0;
+            border:      none;
+            background:  transparent;
+            width:       100%;
+            height:      auto;
+            font-size:   inherit;
+            font-family: inherit;
+            line-height: inherit;
+            display:     inline;
+        }
+
+        #ljsp-output
         {
             font-family:      "JetBrains Mono", monospace;
             background-color: oklch(14.5% 0 none);
@@ -84,9 +128,10 @@
             padding:          1rem;
             font-size:        1.2rem;
             display:          block;
+            box-sizing:       border-box;
         }
 
-        pre
+        #ljsp-ast
         {
             font-family:      "JetBrains Mono", monospace;
             background-color: oklch(26.9% 0 none);
@@ -149,6 +194,21 @@
             background-color: oklch(26.9% 0 none) !important;
         }
 
+        .hljs-variable
+        {
+            color: #ae81ff !important;
+        }
+
+        .hljs-punctuation
+        {
+            color: #a3a3a3 !important;
+        }
+
+        pre code.hljs
+        {
+            padding: 0 !important;
+        }
+
         @keyframes fade-in-slide-up
         {
             0%
@@ -182,23 +242,23 @@
                 gap:                   1.5rem;
             }
 
-            textarea,
-            pre
+            .editor-container,
+            #ljsp-ast
             {
                 width: 100%;
             }
 
-            code
+            #ljsp-output
             {
                 width: 91%;
             }
 
-            textarea
+            .editor-container
             {
                 height: 30vh;
             }
 
-            pre
+            #ljsp-ast
             {
                 min-height: 30vh;
             }
@@ -213,10 +273,12 @@
     <div id="split-view">
         <div id="left">
             <label for="ljsp-code">Source</label>
-            <textarea id="ljsp-code" style="margin-bottom: 1rem;">;check your dev console :)
+            <div class="editor-container">
+                <textarea id="ljsp-code" spellcheck="false" autocomplete="off">;check your dev console :)
 (:const str 'Hello LJSP!')
-($console.log str)
-            </textarea>
+($console.log str)</textarea>
+                <pre id="ljsp-code-pre"><code id="ljsp-code-display" class="language-ljsp"></code></pre>
+            </div>
 
             <label for="ljsp-output">Output</label>
             <code id="ljsp-output"><span id="ljsp-output-caret">|</span></code>
@@ -232,12 +294,69 @@
     import hljs from 'highlight.js';
     import 'highlight.js/styles/monokai-sublime.css';
 
-    hljs.highlightAll();
+    hljs.registerLanguage('ljsp', (hljs) => ({
+        name: 'LJSP',
+        contains: [
+            hljs.COMMENT(';', '$'),
+            {
+                className: 'string',
+                variants: [
+                    { begin: "'", end: "'" },
+                    { begin: '"', end: '"' }
+                ]
+            },
+            {
+                className: 'number',
+                begin: '\\b\\d+(\\.\\d+)?\\b'
+            },
+            {
+                className: 'literal',
+                begin: '@[true|false|null]+'
+            },
+            {
+                className: 'keyword',
+                begin: ':[a-zA-Z0-9_-]+'
+            },
+            {
+                className: 'symbol',
+                begin: '\\$[a-zA-Z0-9_.]+'
+            },
+            {
+                className: 'title.function',
+                begin: '(?<=\\()([a-zA-Z_?!:-][a-zA-Z0-9_?!:-]*|[+\\-*/<>=%]+)'
+            },
+            {
+                className: 'variable',
+                begin: '[a-zA-Z_][a-zA-Z0-9_?!:-]*'
+            },
+            {
+                className: 'operator',
+                begin: '[+\\-*/<>=%]+'
+            },
+            {
+                className: 'punctuation',
+                begin: '[()]'
+            }
+        ]
+    }));
 
     const ljsp_code = document.querySelector('#ljsp-code');
+    const ljsp_code_pre = document.querySelector('#ljsp-code-pre');
+    const ljsp_code_display = document.querySelector('#ljsp-code-display');
     const ljsp_ast = document.querySelector('#ljsp-ast');
     const ljsp_output = document.querySelector('#ljsp-output');
     const ljsp_output_caret = document.querySelector('#ljsp-output-caret');
+
+    const update_editor_highlight = () =>
+    {
+        let content = ljsp_code.value;
+        if (content.endsWith('\n')) {
+            content += ' ';
+        }
+        ljsp_code_display.textContent = content;
+        delete ljsp_code_display.dataset.highlighted;
+        hljs.highlightElement(ljsp_code_display);
+    };
 
     const run_ljsp = () =>
     {
@@ -245,9 +364,9 @@
         {
             const {ast, output} = run(ljsp_code.value);
 
-            ljsp_ast.textContent = JSON.stringify(ast, null, 2)
+            ljsp_ast.textContent = JSON.stringify(ast, null, 2);
             ljsp_output.textContent = output;
-            ljsp_output.style.color = '#e6db74'
+            ljsp_output.style.color = '#e6db74';
             ljsp_output.appendChild(ljsp_output_caret);
 
             delete ljsp_ast.dataset.highlighted;
@@ -255,15 +374,52 @@
         }
         catch (err)
         {
-            ljsp_ast.textContent = 'Error occurred, could not build ast.'
-            ljsp_output.style.color = '#f92672'
+            ljsp_ast.textContent = 'Error occurred, could not build ast.';
+            ljsp_output.style.color = '#f92672';
             ljsp_output.textContent = err;
         }
-    }
+    };
 
-    ljsp_code.addEventListener('focusout', () =>
+    ljsp_code.addEventListener('input', () =>
     {
-        run_ljsp()
+        update_editor_highlight();
+        run_ljsp();
+    });
+
+    ljsp_code.addEventListener('scroll', () =>
+    {
+        ljsp_code_pre.scrollTop = ljsp_code.scrollTop;
+        ljsp_code_pre.scrollLeft = ljsp_code.scrollLeft;
+    });
+
+    ljsp_code.addEventListener('keydown', (e) =>
+    {
+        if (e.key === 'Tab')
+        {
+            e.preventDefault();
+            const start = ljsp_code.selectionStart;
+            const end = ljsp_code.selectionEnd;
+
+            ljsp_code.value = ljsp_code.value.substring(0, start) + '  ' + ljsp_code.value.substring(end);
+
+            ljsp_code.selectionStart = ljsp_code.selectionEnd = start + 2;
+
+            update_editor_highlight();
+            run_ljsp();
+        }
+        if (e.key === '(' || e.key === ')')
+        {
+            e.preventDefault();
+            const start = ljsp_code.selectionStart;
+            const end = ljsp_code.selectionEnd;
+
+            ljsp_code.value = ljsp_code.value.substring(0, start) + '()' + ljsp_code.value.substring(end);
+
+            ljsp_code.selectionStart = ljsp_code.selectionEnd = start + 1;
+
+            update_editor_highlight();
+            run_ljsp();
+        }
     });
 
     setInterval(() =>
@@ -271,7 +427,8 @@
         ljsp_output_caret.classList.toggle('hidden');
     }, 1000);
 
-    run_ljsp()
+    update_editor_highlight();
+    run_ljsp();
 </script>
 </body>
 </html>
