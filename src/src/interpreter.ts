@@ -1,6 +1,5 @@
 import type {ASTNode, Token} from "@types";
 import {global_env} from "./env/global.ts";
-import {console_env} from "./env/console.ts";
 import {list_env} from "./env/list.ts";
 
 type Environment = Record<string, any>;
@@ -9,7 +8,6 @@ const create_global_env = (): Environment => (
     {
         ...global_env,
         ...list_env,
-        '$console': console_env,
     }
 );
 
@@ -143,6 +141,22 @@ const evaluate = (node: ASTNode, env: Environment): any =>
             throw new Error('Unexpected \':catch\' form outside of \':try\'.')
         }
 
+        if (first_evaluated === 'set')
+        {
+            const [target_node, prop_node, val_node] = rest;
+            const target = evaluate(target_node, env);
+
+            if (typeof target !== 'object' || target === null)
+            {
+                throw new Error('Target of :set must be an object');
+            }
+
+            const prop = evaluate(prop_node, env);
+            const val = evaluate(val_node, env);
+
+            target[prop] = val;
+            return val;
+        }
 
         if (typeof first_evaluated !== 'function')
         {
@@ -163,32 +177,41 @@ const evaluate = (node: ASTNode, env: Environment): any =>
         case 'string':
             return token.value.slice(1, -1);
         case 'keyword':
-            if ([':const', ':if', ':fn', ':do', ':and', ':or', ':try', ':catch', ':throw'].includes(token.value))
+            if ([':const', ':if', ':fn', ':do', ':and', ':or', ':try', ':catch', ':throw', ':set'].includes(token.value))
             {
                 return token.value.slice(1);
             }
             return Symbol.for(token.value);
+        // JAVASCRIPT INTEROP
         case 'symbol':
         case 'operator':
-            if (token.value.includes('.'))
+        {
+            const is_js = token.value.startsWith('$');
+            const raw_path = is_js ? token.value.slice(1) : token.value;
+
+            if (is_js && !raw_path) return globalThis;
+
+            const parts = raw_path.split('.');
+            let current: any = is_js ? globalThis : env;
+            let parent: any = null;
+
+            for (const part of parts)
             {
-                const parts = token.value.split('.');
-                let current = env;
-                for (const part of parts)
+                if (current === null || current === undefined || !(part in current))
                 {
-                    if (current === null || current === undefined || !(part in current))
-                    {
-                        throw new Error(`Unknown symbol: ${token.value}`);
-                    }
-                    current = current[part];
+                    throw new Error(`Unknown symbol: ${token.value}`);
                 }
-                return current ?? null;
+                parent = current;
+                current = current[part];
             }
-            if (token.value in env)
+
+            if (typeof current === 'function' && is_js)
             {
-                return env[token.value] ?? null;
+                return (args: any[]) => current.apply(parent, args);
             }
-            throw new Error(`Unknown ${token.kind}: ${token.value}`);
+
+            return current ?? null;
+        }
         default:
             return token.value;
     }

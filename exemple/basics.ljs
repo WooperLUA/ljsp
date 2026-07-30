@@ -1,0 +1,5 @@
+(:const btn ($document.createElement 'button'))
+(:set btn 'textContent' 'Click me')
+(:set btn 'onclick'
+  (:fn (e) ($console.log 'Hello world')))
+($document.body.appendChild btn)

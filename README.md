@@ -6,7 +6,7 @@ A small lisp language made for JavaScript developers.
 - **Lisp Syntax**: Parentheses for function calls `(func arg1 arg2)`.
 - **List Support**: Square brackets for list literals `[1 2 3]`.
 - **Keywords**: Keywords start with the `:` prefix.
-- **JavaScript Interop**: Access JavaScript native methods with the `$` prefix (only `$console` support for now).
+- **JavaScript Interop**: Access JavaScript native methods with the `$` prefix.
 - **Others**: Boolean and null literals use `@true`, `@false`, and `@null` (`undefined` is treated as null).
 
 ## Sandbox available
@@ -22,11 +22,9 @@ Check out the LJSP sandbox here to test out the language.
 - Booleans: `@true`, `@false`
 - Null: `@null`
 - Lists: `[1 2 3 [4 5]]`
-- Keywords: `:const`, `:fn`, `:if`
+- Keywords: `:const`, `:if`, `:fn`, `:do`, `:and`, `:or`, `:try`, `:catch`, `:throw`, `:set`
 
 ### Core Operations
-Since the environment maps keywords to their respective functionalities, you typically call them by evaluating the keyword:
-
 ```ljs
 (:const x 10)
 (:const add-five (:fn (n) (+ n 5)))
@@ -73,9 +71,9 @@ The `:do` keyword allows grouping multiple expressions, returning the result of 
 (echo (join my-list ', '))                                      ; 1, 2, 3, 4
 ```
 
-### Console Methods (with JavaScript interop)
+### JavaScript interop
 ```ljs
 ($console.log 'Value of x is:' x)
-($console.warn 'Warning message')
-($console.table [[1 2] [3 4]])
+(:const user ($JSON.parse '{"profile": {"details": {"age": 30}}}'))
+(:const div ($document.createElement 'div'))
 ```

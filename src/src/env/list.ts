@@ -56,6 +56,18 @@ export const list_env = {
                     if (!Array.isArray(list)) throw new Error('First argument to reverse must be a list');
                     return [...list].reverse();
                 },
+    'sort':     (args: any[]) =>
+                {
+                    const [list, compare_fn] = args;
+                    if (!Array.isArray(list)) throw new Error('First argument to sort must be a list');
+
+                    const copy = [...list];
+                    if (compare_fn)
+                    {
+                        return copy.sort((a, b) => compare_fn([a, b]));
+                    }
+                    return copy.sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
+                },
     'get':      (args: any[]) =>
                 {
                     if (args.length < 2) throw new Error('Expected 2 arguments (get <list> <index>)');
