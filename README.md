@@ -38,12 +38,39 @@ Since the environment maps keywords to their respective functionalities, you typ
 (:if (> x 5) 'large' 'small')
 ```
 
+### Multiple Expressions (Do)
+The `:do` keyword allows grouping multiple expressions, returning the result of the last one.
+```ljs
+(:if (> x 0)
+  (:do
+    ($console.log 'Positive')
+    (+ x 1))
+  0)
+```
+
+### Errors
+```ljs
+(:const divide (:fn (x y)
+  (:if (= y 0)
+    (:throw 'Cannot divide by 0')
+    (/ x y))))
+
+(:try
+  (divide 10 5)
+(:catch err
+  (echo err)))
+```
+
 ### List Manipulation
 ```ljs
 (:const my-list [1 2 3])
 (get my-list 0)      ; 1
 (length my-list)     ; 3
 (push my-list 4)     ; [1 2 3 4]
+(:const doubled (map my-list (:fn (x) (* x 2))))                ; [2 4 6 8]
+(:const evens (filter my-list (:fn (x) (!= x 2))))              ; [1 3 4]
+(:const total (reduce my-list (:fn (acc curr) (+ acc curr)) 0)) ; 10
+(echo (join my-list ', '))                                      ; 1, 2, 3, 4
 ```
 
 ### Console Methods (with JavaScript interop)

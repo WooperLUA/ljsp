@@ -19,21 +19,6 @@ export const global_env = {
                   if (args.length < 1) throw new Error('Expected 1 argument (echo <value>');
                   return args.map(arg => stringify(arg)).join(' ');
               },
-    'get':    (args: any[]) =>
-              {
-                  if (args.length < 2) throw new Error('Expected 2 arguments (get <list> <index>)');
-                  return args[0][args[1]] ?? null
-              },
-    'length': (args: any[]) =>
-              {
-                  if (args.length < 1) throw new Error(`Expected 1 argument (length <value>)`);
-                  return args[0].length
-              },
-    'push':   (args: any[]) =>
-              {
-                  if (args.length < 2) throw new Error(`Expected 2 arguments (push <list> <value>)`);
-                  return [...args[0], ...args.slice(1)]
-              },
     'typeof': (args: any[]) =>
               {
                   if (args.length < 1) throw new Error(`Expected 1 argument (typeof <value>)`);

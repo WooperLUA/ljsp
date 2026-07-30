@@ -1,12 +1,14 @@
 import type {ASTNode, Token} from "@types";
 import {global_env} from "./env/global.ts";
 import {console_env} from "./env/console.ts";
+import {list_env} from "./env/list.ts";
 
 type Environment = Record<string, any>;
 
 const create_global_env = (): Environment => (
     {
         ...global_env,
+        ...list_env,
         '$console': console_env,
     }
 );
@@ -41,7 +43,8 @@ const evaluate = (node: ASTNode, env: Environment): any =>
         if (first_evaluated === 'if')
         {
             const [test, then, otherwise] = rest;
-            return evaluate(test, env) ? evaluate(then, env) : evaluate(otherwise, env);
+            const branch_env = Object.create(env);
+            return evaluate(test, env) ? evaluate(then, branch_env) : evaluate(otherwise, branch_env);
         }
 
         if (first_evaluated === 'fn')
@@ -78,6 +81,69 @@ const evaluate = (node: ASTNode, env: Environment): any =>
             };
         }
 
+        if (first_evaluated === 'do')
+        {
+            let res = null;
+            for (const expr of rest)
+            {
+                res = evaluate(expr, env);
+            }
+            return res;
+        }
+
+        if (first_evaluated === 'and' || first_evaluated === 'or')
+        {
+            const [first_cond, second_cond] = rest;
+            return first_evaluated === 'and' ? evaluate(first_cond, env) && evaluate(second_cond, env)
+                : evaluate(first_cond, env) || evaluate(second_cond, env);
+        }
+
+        if (first_evaluated === 'throw')
+        {
+            const [msg_node] = rest;
+            const message = evaluate(msg_node, env);
+            throw new Error(typeof message === 'string' ? message : stringify(message));
+        }
+
+        // I hate this code, but it works and that's sufficient
+        if (first_evaluated === 'try')
+        {
+            const [try_node, catch_node] = rest;
+
+            try
+            {
+                return evaluate(try_node, env);
+            }
+            catch (err)
+            {
+                if (Array.isArray(catch_node) && (catch_node[0] as Token)?.value === ':catch')
+                {
+                    const raw_var = catch_node[1];
+                    const error_var: string = typeof raw_var === 'object' && raw_var !== null
+                        ? String((raw_var as Token)?.value ?? '')
+                        : String(raw_var);
+
+                    const catch_body = catch_node[2];
+                    const err_msg = err instanceof Error ? err.message : String(err);
+
+                    const catch_env = typeof env.extend === 'function'
+                        ? env.extend({[error_var]: err_msg})
+                        : Object.assign(Object.create(env), {...env, [error_var]: err_msg});
+
+                    return evaluate(catch_body, catch_env);
+                }
+
+                return evaluate(catch_node, env);
+            }
+        }
+
+        // this eval case exists only to warn the user that they messed up
+        if (first_evaluated === 'catch')
+        {
+            throw new Error('Unexpected \':catch\' form outside of \':try\'.')
+        }
+
+
         if (typeof first_evaluated !== 'function')
         {
             throw new Error(`${stringify(first_evaluated)} is not a function`);
@@ -97,7 +163,7 @@ const evaluate = (node: ASTNode, env: Environment): any =>
         case 'string':
             return token.value.slice(1, -1);
         case 'keyword':
-            if ([':const', ':if', ':fn'].includes(token.value))
+            if ([':const', ':if', ':fn', ':do', ':and', ':or', ':try', ':catch', ':throw'].includes(token.value))
             {
                 return token.value.slice(1);
             }
